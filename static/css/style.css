@@ -1,0 +1,22 @@
+/* Custom styles if needed - Tailwind CSS is primary */
+.platform-tab.active {
+    @apply border-blue-500 text-blue-500;
+}
+
+.preview-platform {
+    /* Add any specific styles for preview containers if necessary */
+}
+
+/* Ensure whitespace is preserved in previews */
+#twitterPostContent,
+#facebookPostContent,
+#linkedinPostContent {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Placeholder styling for images - replace with actual or better placeholders if desired */
+.preview-platform img {
+    background-color: #e2e8f0; /* bg-gray-200 */
+}
+
