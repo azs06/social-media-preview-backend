@@ -3,204 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>social_media_previewer</title>
+    <title>Social Media Post Previewer and Scorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        h2 { margin-top: 0; }
-        label { display: inline-block; width: 80px; margin-bottom: 5px; }
-        input[type="text"], input[type="email"], input[type="number"] { margin-bottom: 10px; padding: 5px; width: 200px; }
-        button { padding: 8px 15px; margin-right: 10px; cursor: pointer; }
-        pre { background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .platform-tab.active {
+            border-color: #3b82f6; /* blue-500 */
+            color: #3b82f6; /* blue-500 */
+            font-weight: 600;
+        }
+        .preview-content {
+            min-height: 80px;
+            background-color: #f9fafb; /* gray-50 */
+            border: 1px dashed #d1d5db; /* gray-300 */
+            padding: 12px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb; /* gray-200 */
+        }
+        /* Custom styles for file input */
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        .custom-file-input::before {
+            content: 'Select Image';
+            display: inline-block;
+            background: #3b82f6; /* blue-500 */
+            color: white;
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem 1rem; /* py-2 px-4 */
+            outline: none;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem; /* text-sm */
+        }
+        .custom-file-input:hover::before {
+            background: #2563eb; /* blue-600 */
+        }
+        .custom-file-input:active::before {
+            background: #1d4ed8; /* blue-700 */
+        }
     </style>
 </head>
-<body>
-    <h1>User API Test</h1>
+<body class="bg-gray-100 text-gray-800 p-4 md:p-8">
 
-    <!-- Get All Users -->
-    <div class="section">
-        <h2>Get All Users (GET /users)</h2>
-        <button onclick="getUsers()">Get Users</button>
-        <pre id="get-users-result"></pre>
-    </div>
+    <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-center text-blue-600">Social Media Post Scorer</h1>
+            <p class="text-center text-gray-500 mt-2">Craft the perfect post and get an AI-powered performance score!</p>
+        </header>
 
-    <!-- Create User -->
-    <div class="section">
-        <h2>Create User (POST /users)</h2>
-        <label for="create-username">Username:</label>
-        <input type="text" id="create-username" name="username"><br>
-        <label for="create-email">Email:</label>
-        <input type="email" id="create-email" name="email"><br>
-        <button onclick="createUser()">Create User</button>
-        <pre id="create-user-result"></pre>
-    </div>
+        <div class="mb-6">
+            <label for="postContent" class="block text-sm font-medium text-gray-700 mb-1">Post Content:</label>
+            <textarea id="postContent" rows="5" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Write your social media post here..."></textarea>
+        </div>
 
-    <!-- Get Single User -->
-    <div class="section">
-        <h2>Get Single User (GET /users/&lt;id&gt;)</h2>
-        <label for="get-user-id">User ID:</label>
-        <input type="number" id="get-user-id" name="user_id"><br>
-        <button onclick="getUser()">Get User</button>
-        <pre id="get-user-result"></pre>
-    </div>
+        <div class="mb-6">
+            <label for="postImage" class="block text-sm font-medium text-gray-700 mb-1">Upload Image (Optional):</label>
+            <div class="flex items-center space-x-4">
+                <input type="file" id="postImage" accept="image/*" class="custom-file-input text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <button id="removeImageBtn" class="hidden px-3 py-2 text-sm font-medium text-red-600 bg-red-100 hover:bg-red-200 rounded-lg">Remove Image</button>
+            </div>
+            <div class="mt-4">
+                <img id="imagePreview" src="#" alt="Image Preview" class="hidden object-contain mx-auto"/>
+            </div>
+        </div>
 
-    <!-- Update User -->
-    <div class="section">
-        <h2>Update User (PUT /users/&lt;id&gt;)</h2>
-        <label for="update-user-id">User ID:</label>
-        <input type="number" id="update-user-id" name="user_id"><br>
-        <label for="update-username">New Username:</label>
-        <input type="text" id="update-username" name="username"><br>
-        <label for="update-email">New Email:</label>
-        <input type="email" id="update-email" name="email"><br>
-        <button onclick="updateUser()">Update User</button>
-        <pre id="update-user-result"></pre>
-    </div>
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Platform:</label>
+            <div class="flex border-b border-gray-200">
+                <button data-platform="twitter" class="platform-tab py-3 px-4 text-sm font-medium text-gray-500 hover:text-blue-500 border-b-2 border-transparent focus:outline-none active">Twitter</button>
+                <button data-platform="facebook" class="platform-tab py-3 px-4 text-sm font-medium text-gray-500 hover:text-blue-500 border-b-2 border-transparent focus:outline-none">Facebook</button>
+                <button data-platform="linkedin" class="platform-tab py-3 px-4 text-sm font-medium text-gray-500 hover:text-blue-500 border-b-2 border-transparent focus:outline-none">LinkedIn</button>
+            </div>
+        </div>
 
-    <!-- Delete User -->
-    <div class="section">
-        <h2>Delete User (DELETE /users/&lt;id&gt;)</h2>
-        <label for="delete-user-id">User ID:</label>
-        <input type="number" id="delete-user-id" name="user_id"><br>
-        <button onclick="deleteUser()">Delete User</button>
-        <pre id="delete-user-result"></pre>
+        <div class="mb-8 text-center">
+            <button id="getScoreBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Get AI Score & Feedback
+            </button>
+        </div>
+
+        <div id="scoreArea" class="hidden p-6 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <h3 class="text-xl font-semibold text-indigo-700 mb-3">Analysis Results:</h3>
+            <p class="text-lg"><strong>Score:</strong> <span id="scoreValue" class="font-bold text-indigo-600">--/100</span></p>
+            <p class="mt-2"><strong>Feedback:</strong> <span id="scoreFeedback" class="text-gray-700">Waiting for analysis...</span></p>
+            <div id="suggestionsArea" class="hidden mt-3">
+                 <p class="font-semibold text-indigo-700"><strong>Content Suggestions:</strong></p>
+                 <p id="scoreSuggestions" class="text-gray-700 whitespace-pre-wrap"></p>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h3 class="text-xl font-semibold text-gray-700 mb-3">Live Preview:</h3>
+            <div id="previewTwitter" class="border p-4 rounded-lg bg-white shadow">
+                <h4 class="font-bold text-blue-500 mb-2">Twitter Preview</h4>
+                <div id="twitterPostContent" class="preview-content text-sm">Your post will appear here...</div>
+                <img id="twitterImagePreview" src="#" alt="" class="hidden mt-2 max-w-full h-auto rounded"/>
+            </div>
+            <div id="previewFacebook" class="hidden border p-4 rounded-lg bg-white shadow">
+                <h4 class="font-bold text-blue-700 mb-2">Facebook Preview</h4>
+                <div id="facebookPostContent" class="preview-content">Your post will appear here...</div>
+                <img id="facebookImagePreview" src="#" alt="" class="hidden mt-2 max-w-full h-auto rounded"/>
+            </div>
+            <div id="previewLinkedIn" class="hidden border p-4 rounded-lg bg-white shadow">
+                <h4 class="font-bold text-blue-800 mb-2">LinkedIn Preview</h4>
+                <div id="linkedinPostContent" class="preview-content">Your post will appear here...</div>
+                <img id="linkedinImagePreview" src="#" alt="" class="hidden mt-2 max-w-full h-auto rounded"/>
+            </div>
+        </div>
     </div>
 
     <script>
-        const API_BASE_URL = '/api/users';
+        document.addEventListener("DOMContentLoaded", () => {
+            // Main content and platform elements
+            const postContentTextarea = document.getElementById("postContent");
+            const platformTabs = document.querySelectorAll(".platform-tab");
+            
+            // Image elements
+            const postImageInput = document.getElementById("postImage");
+            const imagePreview = document.getElementById("imagePreview");
+            const removeImageBtn = document.getElementById("removeImageBtn");
 
-        // Helper function to display results
-        function displayResult(elementId, data) {
-            document.getElementById(elementId).textContent = JSON.stringify(data, null, 2);
-        }
+            // Preview elements
+            const previewPlatforms = {
+                twitter: document.getElementById("previewTwitter"),
+                facebook: document.getElementById("previewFacebook"),
+                linkedin: document.getElementById("previewLinkedIn")
+            };
+            const postContentAreas = {
+                twitter: document.getElementById("twitterPostContent"),
+                facebook: document.getElementById("facebookPostContent"),
+                linkedin: document.getElementById("linkedinPostContent")
+            };
+            // Image previews for each platform
+            const platformImagePreviews = {
+                twitter: document.getElementById("twitterImagePreview"),
+                facebook: document.getElementById("facebookImagePreview"),
+                linkedin: document.getElementById("linkedinImagePreview")
+            };
 
-        // Helper function to display errors
-        function displayError(elementId, error) {
-            document.getElementById(elementId).textContent = `Error: ${error.message || error}`;
-        }
+            // Score and feedback elements
+            const getScoreBtn = document.getElementById("getScoreBtn");
+            const scoreArea = document.getElementById("scoreArea");
+            const scoreValue = document.getElementById("scoreValue");
+            const scoreFeedback = document.getElementById("scoreFeedback");
+            const suggestionsArea = document.getElementById("suggestionsArea");
+            const scoreSuggestions = document.getElementById("scoreSuggestions");
 
-        // GET /users
-        async function getUsers() {
-            const resultElementId = 'get-users-result';
-            try {
-                const response = await fetch(API_BASE_URL);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                displayResult(resultElementId, data);
-            } catch (error) {
-                displayError(resultElementId, error);
-            }
-        }
+            let currentPlatform = "twitter"; // Default platform
+            let currentImageBase64 = null; // To store the base64 string of the image
 
-        // POST /users
-        async function createUser() {
-            const resultElementId = 'create-user-result';
-            const username = document.getElementById('create-username').value;
-            const email = document.getElementById('create-email').value;
-            if (!username || !email) {
-                displayError(resultElementId, 'Username and email cannot be empty');
-                return;
-            }
-            try {
-                const response = await fetch(API_BASE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email })
+            // --- Image Handling ---
+            if (postImageInput) {
+                postImageInput.addEventListener("change", function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            imagePreview.classList.remove("hidden");
+                            removeImageBtn.classList.remove("hidden");
+                            // Store base64 string without the data URL prefix
+                            currentImageBase64 = e.target.result.split(',')[1];
+                            updateAllImagePreviews(e.target.result);
+                        }
+                        reader.readAsDataURL(file);
+                    }
                 });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || `HTTP error! status: ${response.status}`);
-                displayResult(resultElementId, data);
-                // 清空输入框
-                document.getElementById('create-username').value = '';
-                document.getElementById('create-email').value = '';
-            } catch (error) {
-                displayError(resultElementId, error);
-            }
-        }
-
-        // GET /users/<id>
-        async function getUser() {
-            const resultElementId = 'get-user-result';
-            const userId = document.getElementById('get-user-id').value;
-            if (!userId) {
-                displayError(resultElementId, 'User ID cannot be empty');
-                return;
-            }
-            try {
-                const response = await fetch(`${API_BASE_URL}/${userId}`);
-                 if (response.status === 404) throw new Error('User not found');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                displayResult(resultElementId, data);
-            } catch (error) {
-                displayError(resultElementId, error);
-            }
-        }
-
-        // PUT /users/<id>
-        async function updateUser() {
-            const resultElementId = 'update-user-result';
-            const userId = document.getElementById('update-user-id').value;
-            const username = document.getElementById('update-username').value;
-            const email = document.getElementById('update-email').value;
-            if (!userId) {
-                displayError(resultElementId, 'User ID cannot be empty');
-                return;
-            }
-            const updateData = {};
-            if (username) updateData.username = username;
-            if (email) updateData.email = email;
-            if (Object.keys(updateData).length === 0) {
-                 displayError(resultElementId, 'Please enter a username or email to update');
-                 return;
             }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/${userId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
+            if (removeImageBtn) {
+                removeImageBtn.addEventListener("click", () => {
+                    postImageInput.value = ""; // Clear the file input
+                    imagePreview.src = "#";
+                    imagePreview.classList.add("hidden");
+                    removeImageBtn.classList.add("hidden");
+                    currentImageBase64 = null;
+                    updateAllImagePreviews(null); // Clear platform image previews
                 });
-                if (response.status === 404) throw new Error('User not found');
-                const data = await response.json();
-                 if (!response.ok) throw new Error(data.message || `HTTP error! status: ${response.status}`);
-                displayResult(resultElementId, data);
-                 // Clear input fields
-                document.getElementById('update-username').value = '';
-                document.getElementById('update-email').value = '';
-            } catch (error) {
-                displayError(resultElementId, error);
             }
-        }
-
-        // DELETE /users/<id>
-        async function deleteUser() {
-            const resultElementId = 'delete-user-result';
-            const userId = document.getElementById('delete-user-id').value;
-            if (!userId) {
-                displayError(resultElementId, 'User ID cannot be empty');
-                return;
-            }
-            try {
-                const response = await fetch(`${API_BASE_URL}/${userId}`, {
-                    method: 'DELETE'
-                });
-                if (response.status === 404) throw new Error('User not found');
-                if (!response.ok && response.status !== 204) throw new Error(`HTTP error! status: ${response.status}`); // Allow 204
-                // 204 No Content indicates success
-                if (response.status === 204) {
-                     displayResult(resultElementId, { message: `User ID ${userId} has been successfully deleted` });
-                } else {
-                     // Try to read potential error message even on success-like status if not 204
-                     const data = await response.text();
-                     displayResult(resultElementId, data || { message: `Deletion successful, status code: ${response.status}` });
+            
+            function updateAllImagePreviews(src) {
+                for (const platform in platformImagePreviews) {
+                    if (platformImagePreviews[platform]) {
+                        if (src) {
+                            platformImagePreviews[platform].src = src;
+                            platformImagePreviews[platform].classList.remove("hidden");
+                        } else {
+                            platformImagePreviews[platform].src = "#";
+                            platformImagePreviews[platform].classList.add("hidden");
+                        }
+                    }
                 }
-                 // Clear input field
-                document.getElementById('delete-user-id').value = '';
-            } catch (error) {
-                displayError(resultElementId, error);
             }
-        }
+
+
+            // --- Content and Platform Preview Logic ---
+            function updateAllTextPreviews(content) {
+                for (const platform in postContentAreas) {
+                    if (postContentAreas[platform]) {
+                        postContentAreas[platform].textContent = content || "Your post will appear here...";
+                    }
+                }
+            }
+
+            function switchPlatformView(platform) {
+                currentPlatform = platform;
+                platformTabs.forEach(tab => {
+                    tab.classList.remove("active", "border-blue-500", "text-blue-500", "font-semibold");
+                    tab.classList.add("text-gray-500", "hover:text-blue-500", "border-transparent");
+                    if (tab.dataset.platform === platform) {
+                        tab.classList.add("active", "border-blue-500", "text-blue-500", "font-semibold");
+                        tab.classList.remove("text-gray-500", "hover:text-blue-500", "border-transparent");
+                    }
+                });
+
+                for (const key in previewPlatforms) {
+                    if (previewPlatforms[key]) {
+                        previewPlatforms[key].classList.add("hidden");
+                    }
+                }
+                if (previewPlatforms[platform]) {
+                    previewPlatforms[platform].classList.remove("hidden");
+                }
+            }
+
+            if (postContentTextarea) {
+                postContentTextarea.addEventListener("input", (e) => {
+                    updateAllTextPreviews(e.target.value);
+                });
+            }
+
+            platformTabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+                    switchPlatformView(tab.dataset.platform);
+                });
+            });
+
+            // --- API Call and Score Display ---
+            if (getScoreBtn) {
+                getScoreBtn.addEventListener("click", async () => {
+                    const postText = postContentTextarea.value.trim();
+                    if (!postText) {
+                        // Using a more prominent way to show error, instead of alert.
+                        scoreArea.classList.remove("hidden");
+                        scoreValue.textContent = "N/A";
+                        scoreFeedback.textContent = "Post content cannot be empty. Please write something.";
+                        suggestionsArea.classList.add("hidden");
+                        scoreSuggestions.textContent = "";
+                        return;
+                    }
+
+                    scoreArea.classList.remove("hidden");
+                    scoreValue.textContent = "--/100";
+                    scoreFeedback.textContent = "Analyzing... please wait.";
+                    suggestionsArea.classList.add("hidden");
+                    scoreSuggestions.textContent = "";
+                    getScoreBtn.disabled = true;
+                    getScoreBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+                    const requestBody = {
+                        post_text: postText,
+                        platform: currentPlatform
+                    };
+
+                    if (currentImageBase64) {
+                        requestBody.image_base64 = currentImageBase64;
+                    }
+
+                    try {
+                        const response = await fetch("/api/score_post", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(requestBody),
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            scoreValue.textContent = `${result.score}/100`;
+                            scoreFeedback.textContent = result.feedback;
+                            if (result.content_suggestions && result.content_suggestions.trim() !== "") {
+                                scoreSuggestions.textContent = result.content_suggestions;
+                                suggestionsArea.classList.remove("hidden");
+                            } else {
+                                suggestionsArea.classList.add("hidden");
+                            }
+                        } else {
+                            scoreValue.textContent = "Error";
+                            scoreFeedback.textContent = result.error || "Failed to get score. Please try again.";
+                            suggestionsArea.classList.add("hidden");
+                        }
+                    } catch (error) {
+                        console.error("Error fetching score:", error);
+                        scoreValue.textContent = "Error";
+                        scoreFeedback.textContent = "An error occurred while contacting the scoring service.";
+                        suggestionsArea.classList.add("hidden");
+                    } finally {
+                        getScoreBtn.disabled = false;
+                        getScoreBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                    }
+                });
+            }
+
+            // Initial setup
+            switchPlatformView(currentPlatform);
+            updateAllTextPreviews(postContentTextarea ? postContentTextarea.value : "");
+            updateAllImagePreviews(null); // Ensure image previews are initially hidden
+        });
     </script>
 </body>
 </html>
